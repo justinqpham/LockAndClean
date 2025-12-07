@@ -2,11 +2,12 @@ import Cocoa
 import SwiftUI
 import UserNotifications
 
-class AppDelegate: NSObject, NSApplicationDelegate {
+class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     var statusItem: NSStatusItem?
     var inputMonitor: InputMonitor?
     var hotkeyManager: HotkeyManager?
     var lockPopover: NSPopover?
+    var hotkeyWindow: NSWindow?
 
     enum LockMode {
         case none
@@ -25,6 +26,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             self?.unlockInput()
         }
         checkAccessibilityPermissions()
+
+        // Show launch animation and welcome popover
+        showLaunchAnimation()
     }
 
     func setupNotifications() {
@@ -94,7 +98,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         updateMenuBarIcon()
         updateMenu()
         showLockPopover()
-        showNotification(title: "Keyboard Locked", message: "Press Shift twice to unlock")
+        let hotkeyDesc = hotkeyManager?.getHotkeyDescription() ?? "Double Shift"
+        showNotification(title: "Keyboard Locked", message: "Press \(hotkeyDesc) to unlock")
     }
 
     @objc func lockMouse() {
@@ -103,7 +108,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         updateMenuBarIcon()
         updateMenu()
         showLockPopover()
-        showNotification(title: "Mouse Locked", message: "Press Shift twice to unlock")
+        let hotkeyDesc = hotkeyManager?.getHotkeyDescription() ?? "Double Shift"
+        showNotification(title: "Mouse Locked", message: "Press \(hotkeyDesc) to unlock")
     }
 
     @objc func unlockInput() {
@@ -119,10 +125,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         guard let button = statusItem?.button else { return }
 
         let popover = NSPopover()
-        popover.contentSize = NSSize(width: 200, height: 100)
+        popover.contentSize = NSSize(width: 240, height: 120)
         popover.behavior = .applicationDefined
+        let hotkeyDescription = hotkeyManager?.getHotkeyDescription() ?? "Double Shift"
         popover.contentViewController = NSHostingController(rootView: LockPopoverView(
             lockMode: currentLockMode,
+            hotkeyDescription: hotkeyDescription,
             unlockAction: { [weak self] in
                 self?.unlockInput()
             }
@@ -137,13 +145,75 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         lockPopover = nil
     }
 
+    func showLaunchAnimation() {
+        guard let button = statusItem?.button else { return }
+
+        // Bounce animation for the menu bar icon
+        let animation = CAKeyframeAnimation(keyPath: "transform.scale")
+        animation.values = [1.0, 1.3, 0.9, 1.1, 1.0]
+        animation.keyTimes = [0, 0.25, 0.5, 0.75, 1.0]
+        animation.duration = 0.5
+        animation.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+        button.layer?.add(animation, forKey: "bounce")
+
+        // Show welcome popover briefly
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+            self?.showWelcomePopover()
+        }
+    }
+
+    func showWelcomePopover() {
+        guard let button = statusItem?.button else { return }
+
+        let popover = NSPopover()
+        popover.contentSize = NSSize(width: 180, height: 60)
+        popover.behavior = .applicationDefined
+        popover.contentViewController = NSHostingController(rootView: WelcomePopoverView())
+
+        popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+
+        // Auto-dismiss after 0.5 seconds
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            popover.close()
+        }
+    }
+
     @objc func showHotkeySettings() {
-        let alert = NSAlert()
-        alert.messageText = "Hotkey Settings"
-        alert.informativeText = "Current unlock hotkey: Double Shift\n\nNote: Hotkey customization coming in future version."
-        alert.alertStyle = .informational
-        alert.addButton(withTitle: "OK")
-        alert.runModal()
+        if let existingWindow = hotkeyWindow {
+            existingWindow.makeKeyAndOrderFront(nil)
+            NSApp.activate(ignoringOtherApps: true)
+            return
+        }
+
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 400, height: 250),
+            styleMask: [.titled, .closable],
+            backing: .buffered,
+            defer: false
+        )
+        window.title = "Hotkey Settings"
+        window.center()
+        window.isReleasedWhenClosed = false
+        window.delegate = self
+
+        let hotkeyView = HotkeyConfigView { [weak self] config in
+            self?.hotkeyManager?.setCustomHotkey(config)
+            self?.updateMenu()
+            self?.hotkeyWindow?.close()
+            self?.hotkeyWindow = nil
+        }
+
+        window.contentView = NSHostingView(rootView: hotkeyView)
+        window.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+
+        hotkeyWindow = window
+    }
+
+    func windowWillClose(_ notification: Notification) {
+        if let window = notification.object as? NSWindow, window == hotkeyWindow {
+            hotkeyWindow = nil
+        }
     }
 
     @objc func quitApp() {
@@ -184,30 +254,68 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
 struct LockPopoverView: View {
     let lockMode: AppDelegate.LockMode
+    let hotkeyDescription: String
     let unlockAction: () -> Void
 
     var body: some View {
-        VStack(spacing: 12) {
-            Text(lockMode == .keyboard ? "Keyboard Locked" : "Mouse Locked")
-                .font(.headline)
-                .padding(.top, 8)
+        VStack(spacing: 16) {
+            // Icon and title
+            HStack(spacing: 10) {
+                Image(systemName: "lock.fill")
+                    .font(.system(size: 20))
+                    .foregroundColor(.accentColor)
+
+                Text(lockMode == .keyboard ? "Keyboard Locked" : "Mouse Locked")
+                    .font(.system(size: 13, weight: .semibold))
+            }
+            .padding(.top, 4)
 
             if lockMode == .keyboard {
-                Button("Unlock") {
-                    unlockAction()
+                // Keyboard mode: Show unlock button
+                Button(action: unlockAction) {
+                    Text("Unlock")
+                        .font(.system(size: 13))
+                        .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
+                .controlSize(.large)
             } else {
-                Text("Press Shift twice to unlock")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal)
-            }
+                // Mouse mode: Only show hotkey instruction
+                VStack(spacing: 6) {
+                    Text("To unlock, press")
+                        .font(.system(size: 12))
+                        .foregroundColor(.secondary)
 
-            Spacer()
+                    Text(hotkeyDescription)
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.primary)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 4)
+                        .background(
+                            RoundedRectangle(cornerRadius: 6)
+                                .fill(Color(nsColor: .controlBackgroundColor))
+                        )
+                }
+            }
         }
-        .frame(width: 200, height: 100)
-        .padding()
+        .frame(width: 240, height: 120)
+        .padding(16)
+    }
+}
+
+struct WelcomePopoverView: View {
+    var body: some View {
+        VStack(spacing: 8) {
+            HStack(spacing: 8) {
+                Image(systemName: "lock.open.fill")
+                    .font(.system(size: 18))
+                    .foregroundColor(.accentColor)
+
+                Text("Lock And Clean!")
+                    .font(.system(size: 13, weight: .semibold))
+            }
+        }
+        .frame(width: 180, height: 60)
+        .padding(12)
     }
 }

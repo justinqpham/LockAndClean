@@ -12,6 +12,7 @@
 		AA0000050000000000000001 /* InputMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000060000000000000001 /* InputMonitor.swift */; };
 		AA0000070000000000000001 /* HotkeyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000080000000000000001 /* HotkeyManager.swift */; };
 		AA0000090000000000000001 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA00000A0000000000000001 /* Assets.xcassets */; };
+		AA00000E0000000000000002 /* HotkeyConfigView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000F0000000000000002 /* HotkeyConfigView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -23,6 +24,7 @@
 		AA00000B0000000000000001 /* LockAndClean.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LockAndClean.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA00000C0000000000000001 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		AA00000D0000000000000001 /* LockAndClean.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LockAndClean.entitlements; sourceTree = "<group>"; };
+		AA00000F0000000000000002 /* HotkeyConfigView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotkeyConfigView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -51,6 +53,7 @@
 				AA0000040000000000000001 /* AppDelegate.swift */,
 				AA0000060000000000000001 /* InputMonitor.swift */,
 				AA0000080000000000000001 /* HotkeyManager.swift */,
+				AA00000F0000000000000002 /* HotkeyConfigView.swift */,
 				AA00000A0000000000000001 /* Assets.xcassets */,
 				AA00000C0000000000000001 /* Info.plist */,
 				AA00000D0000000000000001 /* LockAndClean.entitlements */,
@@ -139,6 +142,7 @@
 				AA0000030000000000000001 /* AppDelegate.swift in Sources */,
 				AA0000050000000000000001 /* InputMonitor.swift in Sources */,
 				AA0000070000000000000001 /* HotkeyManager.swift in Sources */,
+				AA00000E0000000000000002 /* HotkeyConfigView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

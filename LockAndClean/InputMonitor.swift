@@ -24,7 +24,9 @@ class InputMonitor {
             let mask1: CGEventMask = 1 << CGEventType.keyDown.rawValue
             let mask2: CGEventMask = 1 << CGEventType.keyUp.rawValue
             let mask3: CGEventMask = 1 << CGEventType.flagsChanged.rawValue
-            eventMask = mask1 | mask2 | mask3
+            // Add system-defined events to capture F1-F12 special functions (brightness, volume, etc.)
+            let mask4: CGEventMask = 1 << CGEventType(rawValue: 14)!.rawValue  // NSEventTypeSystemDefined
+            eventMask = mask1 | mask2 | mask3 | mask4
         case .mouse:
             let mask1: CGEventMask = 1 << CGEventType.leftMouseDown.rawValue
             let mask2: CGEventMask = 1 << CGEventType.leftMouseUp.rawValue
@@ -72,6 +74,7 @@ class InputMonitor {
     }
 
     private func setupNSEventMonitoring() {
+        // Block regular keyboard events
         localEventMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .keyUp, .flagsChanged]) { event in
             print("Local NSEvent - keyCode: \(event.keyCode), characters: \(event.characters ?? "nil")")
             return nil
@@ -126,6 +129,11 @@ class InputMonitor {
             if type == .keyDown || type == .keyUp || type == .flagsChanged {
                 let keyCode = event.getIntegerValueField(.keyboardEventKeycode)
                 print("Blocking keyboard event - type: \(type.rawValue), keyCode: \(keyCode)")
+                return nil
+            }
+            // Block system-defined events (brightness, volume, media keys, etc.)
+            if type.rawValue == 14 {  // NSEventTypeSystemDefined
+                print("Blocking system-defined event (special function key)")
                 return nil
             }
         case .mouse:
