@@ -15,7 +15,7 @@ A macOS menu bar app that lets you lock keyboard or mouse input so you can safel
 - **Default Hotkey** - Double Shift press (works when no custom hotkey is set)
 - **Dual Unlock Methods** - Unlock via hotkey or click the Unlock button (keyboard mode only)
 - **System Notifications** - Get notified when input is locked/unlocked with current hotkey
-- **Launch Animation** - Welcome popover and icon bounce animation on app launch
+- **Launch Animation** - Welcome popover (displays for 1 second) and icon bounce animation on app launch
 
 ## Building in Xcode
 
@@ -113,7 +113,7 @@ The app uses a custom icon from `appIcon.png`, automatically resized to all requ
 - The app runs in the background (LSUIElement = true, doesn't appear in the Dock)
 - Only one input type can be locked at a time
 - Menu bar icon dynamically changes between open lock (unlocked) and closed lock (locked)
-- Launch animation: Icon bounce + welcome popover on first launch
+- Launch animation: Icon bounce + welcome popover (1 second duration) on app launch
 - Persistent popover provides clear visual feedback of lock status
 - Popovers use native macOS design with proper system fonts and colors
 - Notifications require user permission on first run

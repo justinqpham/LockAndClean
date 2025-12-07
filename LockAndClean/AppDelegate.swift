@@ -172,8 +172,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
         popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
 
-        // Auto-dismiss after 0.5 seconds
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+        // Auto-dismiss after 1 second
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
             popover.close()
         }
     }
