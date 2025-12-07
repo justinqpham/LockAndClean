@@ -12,10 +12,10 @@ A macOS menu bar app that lets you lock keyboard or mouse input so you can safel
 - **Mouse/Trackpad Lock** - Completely freezes mouse cursor and disables all clicks/scrolling
 - **Visual Feedback** - Polished popovers with native macOS design showing lock status
 - **Customizable Unlock Hotkey** - Set any key combination as your unlock hotkey
-- **Default Hotkey** - Double Shift press (works when no custom hotkey is set)
+- **Default Hotkey** - Spacebar (works when no custom hotkey is set)
 - **Dual Unlock Methods** - Unlock via hotkey or click the Unlock button (keyboard mode only)
 - **System Notifications** - Get notified when input is locked/unlocked with current hotkey
-- **Launch Animation** - Welcome popover (displays for 1 second) and icon bounce animation on app launch
+- **Launch Animation** - Welcome popover and icon bounce animation on app launch
 
 ## Building in Xcode
 
@@ -41,13 +41,13 @@ Without this permission, the app cannot block input.
 2. Click the menu bar icon and choose:
    - **Lock Keyboard** - Disables all keyboard input (mouse still works)
    - **Lock Mouse/Trackpad** - Freezes cursor and disables all mouse input
-   - **Unlock Hotkey** - Configure a custom unlock hotkey (default: Double Shift)
-3. **When Locked** - The menu bar icon changes to a closed lock and a persistent popover appears showing:
+   - **Unlock Hotkey** - Configure a custom unlock hotkey (default: Spacebar)
+3. **When Locked** - The menu bar icon changes to a closed lock and a persistent popover appears (automatically active) showing:
    - For keyboard lock: "Keyboard Locked" with an Unlock button
    - For mouse lock: "Mouse Locked" with instructions to press your configured hotkey
 4. Clean your computer safely while input is disabled
 5. To unlock:
-   - Press your configured hotkey (default: **Double Shift**)
+   - Press your configured hotkey (default: **Spacebar**)
    - Or click the **Unlock** button in the popover (keyboard mode only)
 
 ### Setting a Custom Hotkey
@@ -93,7 +93,7 @@ Without this permission, the app cannot block input.
 ### Unlock Mechanism
 - HotkeyManager monitors for both `flagsChanged` and `keyDown` events
 - Supports custom hotkeys (regular keys, modifier combinations, or modifier-only)
-- Default: Tracks double-press timing for Shift key (within 0.5 seconds)
+- Default: Spacebar key press (when no custom hotkey is set)
 - Works independently of input locking to ensure unlock is always available
 - Hotkey settings are persisted using UserDefaults
 
@@ -113,8 +113,8 @@ The app uses a custom icon from `appIcon.png`, automatically resized to all requ
 - The app runs in the background (LSUIElement = true, doesn't appear in the Dock)
 - Only one input type can be locked at a time
 - Menu bar icon dynamically changes between open lock (unlocked) and closed lock (locked)
-- Launch animation: Icon bounce + welcome popover (1 second duration) on app launch
-- Persistent popover provides clear visual feedback of lock status
+- Launch animation: Icon bounce + welcome popover on first launch
+- Persistent popover provides clear visual feedback of lock status and automatically becomes active
 - Popovers use native macOS design with proper system fonts and colors
 - Notifications require user permission on first run
 - App Sandbox is disabled to allow CGEvent tap functionality

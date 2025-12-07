@@ -6,10 +6,6 @@ class HotkeyManager {
 
     private var eventMonitor: Any?
     private var keyDownMonitor: Any?
-    private var lastShiftPressTime: Date?
-    private let doublePressInterval: TimeInterval = 0.5
-    private var isShiftCurrentlyPressed = false
-    private var shiftPressCount = 0
 
     private var customHotkey: HotkeyConfig? {
         didSet {
@@ -71,43 +67,23 @@ class HotkeyManager {
                 return
             }
         }
-
-        // Default double-shift behavior
-        let shiftPressed = flags.contains(.shift)
-
-        if shiftPressed && !isShiftCurrentlyPressed {
-            let now = Date()
-
-            if let lastPress = lastShiftPressTime,
-               now.timeIntervalSince(lastPress) < doublePressInterval {
-                shiftPressCount += 1
-
-                if shiftPressCount == 1 {
-                    DispatchQueue.main.async { [weak self] in
-                        self?.onHotkeyTriggered?()
-                    }
-                    shiftPressCount = 0
-                    lastShiftPressTime = nil
-                    return
-                }
-            } else {
-                shiftPressCount = 0
-            }
-
-            lastShiftPressTime = now
-            isShiftCurrentlyPressed = true
-
-        } else if !shiftPressed && isShiftCurrentlyPressed {
-            isShiftCurrentlyPressed = false
-        }
     }
 
     private func handleKeyDown(_ event: NSEvent) {
-        guard let hotkey = customHotkey else { return }
-
         let modifiers = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
 
-        if event.keyCode == hotkey.keyCode && modifiers == hotkey.modifiers {
+        // Check for custom hotkey first
+        if let hotkey = customHotkey {
+            if event.keyCode == hotkey.keyCode && modifiers == hotkey.modifiers {
+                DispatchQueue.main.async { [weak self] in
+                    self?.onHotkeyTriggered?()
+                }
+            }
+            return
+        }
+
+        // Default: spacebar (no modifiers)
+        if event.keyCode == kVK_Space && modifiers.isEmpty {
             DispatchQueue.main.async { [weak self] in
                 self?.onHotkeyTriggered?()
             }
@@ -124,7 +100,7 @@ class HotkeyManager {
         if let hotkey = customHotkey {
             return hotkey.displayString
         }
-        return "Double Shift"
+        return "Space"
     }
 
     private func saveHotkey() {

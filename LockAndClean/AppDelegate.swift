@@ -83,7 +83,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
         menu.addItem(NSMenuItem.separator())
 
-        let hotkeyItem = NSMenuItem(title: "Unlock Hotkey: \(hotkeyManager?.getHotkeyDescription() ?? "Double Shift")", action: #selector(showHotkeySettings), keyEquivalent: "")
+        let hotkeyItem = NSMenuItem(title: "Unlock Hotkey: \(hotkeyManager?.getHotkeyDescription() ?? "Space")", action: #selector(showHotkeySettings), keyEquivalent: "")
         menu.addItem(hotkeyItem)
 
         menu.addItem(NSMenuItem.separator())
@@ -98,7 +98,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         updateMenuBarIcon()
         updateMenu()
         showLockPopover()
-        let hotkeyDesc = hotkeyManager?.getHotkeyDescription() ?? "Double Shift"
+        let hotkeyDesc = hotkeyManager?.getHotkeyDescription() ?? "Space"
         showNotification(title: "Keyboard Locked", message: "Press \(hotkeyDesc) to unlock")
     }
 
@@ -108,7 +108,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         updateMenuBarIcon()
         updateMenu()
         showLockPopover()
-        let hotkeyDesc = hotkeyManager?.getHotkeyDescription() ?? "Double Shift"
+        let hotkeyDesc = hotkeyManager?.getHotkeyDescription() ?? "Space"
         showNotification(title: "Mouse Locked", message: "Press \(hotkeyDesc) to unlock")
     }
 
@@ -124,10 +124,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     func showLockPopover() {
         guard let button = statusItem?.button else { return }
 
+        // Activate the application to ensure the popover window becomes active
+        NSApp.activate(ignoringOtherApps: true)
+
         let popover = NSPopover()
         popover.contentSize = NSSize(width: 240, height: 120)
         popover.behavior = .applicationDefined
-        let hotkeyDescription = hotkeyManager?.getHotkeyDescription() ?? "Double Shift"
+        let hotkeyDescription = hotkeyManager?.getHotkeyDescription() ?? "Space"
         popover.contentViewController = NSHostingController(rootView: LockPopoverView(
             lockMode: currentLockMode,
             hotkeyDescription: hotkeyDescription,
@@ -138,6 +141,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
         popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
         lockPopover = popover
+
+        // Make the popover window active after it's shown
+        DispatchQueue.main.async { [weak self] in
+            if let window = self?.lockPopover?.contentViewController?.view.window {
+                window.makeKeyAndOrderFront(nil)
+                NSApp.activate(ignoringOtherApps: true)
+            }
+        }
     }
 
     func hideLockPopover() {
@@ -172,8 +183,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
         popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
 
-        // Auto-dismiss after 1 second
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+        // Auto-dismiss after 0.5 seconds
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             popover.close()
         }
     }
